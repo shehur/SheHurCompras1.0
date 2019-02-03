@@ -5,6 +5,11 @@ var eid = document.getElementById('eid');
 var enome = document.getElementById('enome');
 
 var obrigacao = document.getElementById('obrigacao');
+var sel_nome = document.getElementById('sel_nome');
+var sel_quantidade = document.getElementById('sel_quantidade');
+var sel_valor = document.getElementById('sel_valor');
+
+var nomeDel = '';
 
 function preparaCadastro() {
 	nome.value = '';
@@ -58,6 +63,7 @@ function selecionarDel(index=-1) {
 	var Nome = document.getElementById('nome_'+index).innerText.toString().trim();
 	did.value = parseInt(index);
 	obrigacao.innerText = Nome;
+	nomeDel = Nome;
 }
 
 function deletarUM() {
@@ -71,7 +77,8 @@ function deletarUM() {
 
 	objJSON.splice(Id, 1);
 	localStorage.setItem('shehur-compras-lista', JSON.stringify(objJSON));
-	selecionar();	
+	selecionar();
+	deletarCompra(nomeDel);
 }
 
 selecionar();
@@ -83,6 +90,7 @@ function selecionar() {
 	}
 
 	var linha = "";
+	var opcoes = "<option value=''></option>";
 	var i=0;
 	objJSON.forEach((item) => {
 		var marcacao = parseInt(item.Marcado);
@@ -91,13 +99,16 @@ function selecionar() {
 		linha += 
 		"<tr>" +
 			"<td><label class='switch'><input type='checkbox' id='check_" + i + "' onchange='marcar(" + i + ")' " + str + "><span class='slider round'></span></label></td>" +
-			"<td id='nome_" + i + "' style='word-wrap: break-word'>" + item.Nome + "</td>" +
+			"<td id='nome_" + i + "' style='word-wrap: break-word; word-break: break-all;'>" + item.Nome + "</td>" +
 			"<td align='right'><button type='button' class='btn btn-primary' onclick='selecionarUm(" + i + ")' data-toggle='modal' data-target='#modalEditar'>e</button>" +
 			"<button type='button' class='btn btn-danger' data-toggle='modal' onclick='selecionarDel(" + i + ")' data-target='#modalDeletar'>x</button></td>" +
 		"</tr>";
+
+		opcoes += "<option value='" + item.Nome + "'>" + item.Nome + "</option>";
 		i++;
 	});
 	linhas.innerHTML = linha;
+	sel_nome.innerHTML = opcoes;
 }
 
 function marcar(index=-1) {
@@ -106,7 +117,12 @@ function marcar(index=-1) {
 	if(Nome.toString().trim().length <= 0) Nome = 'Sem nome';
 	var check = document.getElementById('check_'+index);
 	var Marcado = 0;
-	if(check.checked) Marcado = 1;
+	if(check.checked) {
+		Marcado = 1;
+		lancar(Nome);
+	}else {
+		deletarCompra(Nome);
+	}
 
 	var objJSON = [];
 	var banco = localStorage.getItem("shehur-compras-lista");
@@ -117,4 +133,64 @@ function marcar(index=-1) {
 	objObrigacoes = {Nome: Nome, Marcado: Marcado};
 	objJSON[Id] = objObrigacoes;
 	localStorage.setItem('shehur-compras-lista', JSON.stringify(objJSON));	
+}
+
+function lancar(nome='') {
+	$('#lancar').click();
+	sel_nome.value = nome;
+	sel_valor.value = '';
+}
+
+function lancaCompra() {
+	var Nome = sel_nome.value.toString().trim();
+	if(Nome.toString().trim().length <= 0) Nome = 'Sem nome';
+	var Quantidade = parseInt(sel_quantidade.value.toString().trim());
+	if(Quantidade <= 0) Quantidade = 1;
+	var Valor = sel_valor.value.toString().trim();
+	if(Valor.toString().trim().length <= 0) Valor = '0';
+	Valor = Valor.replace(',', '.');
+	Valor = parseFloat(Valor.replace(',', '.'));
+	Valor = Valor * Quantidade;
+
+	var objJSON = [];
+	var banco = localStorage.getItem("shehur-compras-entradas");
+	if(banco) {
+		objJSON = JSON.parse(banco.toString());
+	}
+
+	objObrigacoes = {Nome: Nome, Valor: Valor};
+	objJSON.push(objObrigacoes);
+	localStorage.setItem('shehur-compras-entradas', JSON.stringify(objJSON));
+}
+
+function deletarCompra(_nomeDel='') {
+	var Id = parseInt(indiceCompra(_nomeDel));
+
+	var objJSON = [];
+	var banco = localStorage.getItem("shehur-compras-entradas");
+	if(banco) {
+		objJSON = JSON.parse(banco.toString());
+	}
+
+	objJSON.splice(Id, 1);
+	localStorage.setItem('shehur-compras-entradas', JSON.stringify(objJSON));
+}
+
+function indiceCompra(_nomeDel='') {
+	var index = -1;
+	var objJSON = [];
+	var banco = localStorage.getItem("shehur-compras-entradas");
+	if(banco) {
+		objJSON = JSON.parse(banco.toString());
+	}
+
+	var i = 0;
+	objJSON.forEach((item) => {
+		if(item.Nome == _nomeDel) {
+			index = i;
+		}
+		i++;
+	});
+
+	return index;
 }

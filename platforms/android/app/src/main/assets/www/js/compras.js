@@ -1,4 +1,5 @@
 var nome = document.getElementById('nome');
+var quantidade = document.getElementById('quantidade');
 var valor = document.getElementById('valor');
 var linha = document.getElementById('linha');
 var total = document.getElementById('total');
@@ -17,9 +18,12 @@ function preparaCadastro() {
 function cadastrar() {
 	var Nome = nome.value.toString().trim();
 	if(Nome.toString().trim().length <= 0) Nome = 'Sem nome';
+	var Quantidade = parseInt(quantidade.value.toString().trim());
+	if(Quantidade <= 0) Quantidade = 1;
 	var Valor = valor.value.toString().trim();
 	if(Valor.toString().trim().length <= 0) Valor = '0';
-	Valor = Valor.replace(',', '.');
+	Valor = parseFloat(Valor.replace(',', '.'));
+	Valor = Valor * Quantidade;
 
 	var objJSON = [];
 	var banco = localStorage.getItem("shehur-compras-entradas");
@@ -31,6 +35,7 @@ function cadastrar() {
 	objJSON.push(objObrigacoes);
 	localStorage.setItem('shehur-compras-entradas', JSON.stringify(objJSON));
 	selecionar();
+	lancaLista(Nome);
 }
 
 function selecionarUm(index=-1) {
@@ -104,7 +109,7 @@ function selecionar() {
 		soma += parseFloat(item.Valor);
 		linha += 
 		"<tr>" +
-			"<td id='nome_" + i + "' style='word-wrap: break-word'>" + item.Nome + "</td>" +
+			"<td id='nome_" + i + "' style='word-wrap: break-word; word-break: break-all;'>" + item.Nome + "</td>" +
 			"<td id='valor_" + i + "'>R$ " + item.Valor + "</td>" +
 			"<td align='right'><button type='button' class='btn btn-primary' onclick='selecionarUm(" + i + ")' data-toggle='modal' data-target='#modalEditar'>e</button>" +
 			"<button type='button' class='btn btn-danger' data-toggle='modal' onclick='selecionarDel(" + i + ")' data-target='#modalDeletar'>x</button></td>" +
@@ -112,5 +117,37 @@ function selecionar() {
 		i++;
 	});
 	linhas.innerHTML = linha;
-	total.innerText = 'TOTAL: R$ ' + soma;
+	total.innerText = 'TOTAL: R$ ' + soma.toFixed(2);
+}
+
+function lancaLista(_Nome='') {
+	var objJSON = [];
+	var banco = localStorage.getItem("shehur-compras-lista");
+	if(banco) {
+		objJSON = JSON.parse(banco.toString());
+	}
+
+	var i=0;
+	objJSON.forEach((item) => {
+		if(_Nome == item.Nome) {
+			marcar(i, _Nome, 1);
+		}
+		i++;
+	});
+}
+
+function marcar(_index=-1, _nome='', _marcado=1) {
+	var Id = parseInt(_index);
+	var Nome = _nome.toString().trim();
+	if(Nome.toString().trim().length <= 0) Nome = 'Sem nome';
+
+	var objJSON = [];
+	var banco = localStorage.getItem("shehur-compras-lista");
+	if(banco) {
+		objJSON = JSON.parse(banco.toString());
+	}
+
+	objObrigacoes = {Nome: Nome, Marcado: _marcado};
+	objJSON[Id] = objObrigacoes;
+	localStorage.setItem('shehur-compras-lista', JSON.stringify(objJSON));	
 }
