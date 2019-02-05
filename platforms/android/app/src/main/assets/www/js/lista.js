@@ -10,6 +10,7 @@ var sel_quantidade = document.getElementById('sel_quantidade');
 var sel_valor = document.getElementById('sel_valor');
 
 var nomeDel = '';
+var indexTemp = -1;
 
 function preparaCadastro() {
 	nome.value = '';
@@ -113,6 +114,7 @@ function selecionar() {
 
 function marcar(index=-1) {
 	var Id = parseInt(index);
+	indexTemp = Id;
 	var Nome = document.getElementById('nome_'+index).innerText.toString().trim();
 	if(Nome.toString().trim().length <= 0) Nome = 'Sem nome';
 	var check = document.getElementById('check_'+index);
@@ -135,6 +137,45 @@ function marcar(index=-1) {
 	localStorage.setItem('shehur-compras-lista', JSON.stringify(objJSON));	
 }
 
+function cancelaCompra() {
+	var index = parseInt(indexTemp);
+	var Id = parseInt(index);
+	var Nome = document.getElementById('nome_'+index).innerText.toString().trim();
+	if(Nome.toString().trim().length <= 0) Nome = 'Sem nome';
+	var check = document.getElementById('check_'+index);
+	var Marcado = 0;
+	check.checked = false;
+
+	var objJSON = [];
+	var banco = localStorage.getItem("shehur-compras-lista");
+	if(banco) {
+		objJSON = JSON.parse(banco.toString());
+	}
+
+	objObrigacoes = {Nome: Nome, Marcado: Marcado};
+	objJSON[Id] = objObrigacoes;
+	localStorage.setItem('shehur-compras-lista', JSON.stringify(objJSON));	
+}
+
+function temCompra(_nome='') {
+	var retorno = false;
+	var objJSON = [];
+	var banco = localStorage.getItem("shehur-compras-entradas");
+	if(banco) {
+		objJSON = JSON.parse(banco.toString());
+	}
+
+	var Nome1 = _nome.toString().trim();
+	objJSON.forEach((item) => {
+		var Nome2 = item.Nome.toString().trim();
+		if(Nome1 == Nome2) {
+			retorno = true;
+		}
+	});
+
+	return retorno;
+}
+
 function lancar(nome='') {
 	$('#lancar').click();
 	sel_nome.value = nome;
@@ -150,30 +191,38 @@ function lancaCompra() {
 	if(Valor.toString().trim().length <= 0) Valor = '0';
 	Valor = Valor.replace(',', '.');
 	Valor = parseFloat(Valor.replace(',', '.'));
-	Valor = Valor * Quantidade;
+	if(Valor > 0) {
+		if(!existeCompra(Nome)) {
+			Valor = Valor * Quantidade;
 
-	var objJSON = [];
-	var banco = localStorage.getItem("shehur-compras-entradas");
-	if(banco) {
-		objJSON = JSON.parse(banco.toString());
+			var objJSON = [];
+			var banco = localStorage.getItem("shehur-compras-entradas");
+			if(banco) {
+				objJSON = JSON.parse(banco.toString());
+			}
+
+			objObrigacoes = {Nome: Nome, Valor: Valor};
+			objJSON.push(objObrigacoes);
+			localStorage.setItem('shehur-compras-entradas', JSON.stringify(objJSON));
+		}
+	}else {
+		cancelaCompra();
 	}
-
-	objObrigacoes = {Nome: Nome, Valor: Valor};
-	objJSON.push(objObrigacoes);
-	localStorage.setItem('shehur-compras-entradas', JSON.stringify(objJSON));
 }
 
 function deletarCompra(_nomeDel='') {
 	var Id = parseInt(indiceCompra(_nomeDel));
 
-	var objJSON = [];
-	var banco = localStorage.getItem("shehur-compras-entradas");
-	if(banco) {
-		objJSON = JSON.parse(banco.toString());
-	}
+	if(Id >= 0) {
+		var objJSON = [];
+		var banco = localStorage.getItem("shehur-compras-entradas");
+		if(banco) {
+			objJSON = JSON.parse(banco.toString());
+		}
 
-	objJSON.splice(Id, 1);
-	localStorage.setItem('shehur-compras-entradas', JSON.stringify(objJSON));
+		objJSON.splice(Id, 1);
+		localStorage.setItem('shehur-compras-entradas', JSON.stringify(objJSON));
+	}
 }
 
 function indiceCompra(_nomeDel='') {
@@ -193,4 +242,23 @@ function indiceCompra(_nomeDel='') {
 	});
 
 	return index;
+}
+
+function existeCompra(_nome='') {
+	var retorno = false;
+	var objJSON = [];
+	var banco = localStorage.getItem("shehur-compras-entradas");
+	if(banco) {
+		objJSON = JSON.parse(banco.toString());
+	}
+
+	var Nome1 = _nome.toString().trim();
+	objJSON.forEach((item) => {
+		var Nome2 = item.Nome;
+		Nome2 = Nome2.toString().trim();
+		if(Nome1 == Nome2) {
+			retorno = true;
+		}
+	});
+	return retorno;
 }
