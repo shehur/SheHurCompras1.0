@@ -12,6 +12,7 @@ var obrigacao = document.getElementById('obrigacao');
 
 function preparaCadastro() {
 	nome.value = '';
+	quantidade.value = 1;
 	valor.value = '';
 }
 

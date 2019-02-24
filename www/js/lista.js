@@ -179,6 +179,7 @@ function temCompra(_nome='') {
 function lancar(nome='') {
 	$('#lancar').click();
 	sel_nome.value = nome;
+	sel_quantidade.value = 1;
 	sel_valor.value = '';
 }
 
